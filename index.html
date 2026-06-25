@@ -92,17 +92,51 @@
       .tray-slot.correct { background: #4caf50; border-color: #388e3c; }
       .tray-slot.wrong { background: #e53935; }
 
-      #mobile-actions {
-        position: absolute; bottom: 110px; right: 20px;
-        display: none; pointer-events: auto; flex-direction: column; gap: 8px;
+      #mobile-controls {
+        display: none;
+        position: absolute; inset: 0;
+        pointer-events: none; z-index: 15;
       }
-      @media (pointer: coarse) { #mobile-actions { display: flex; } }
-      #mobile-actions button {
-        padding: 12px 20px; background: #f29400; border: 2px solid #c47a00;
-        border-radius: 10px; color: #fff; font-weight: bold; font-size: 15px; cursor: pointer;
+      #mobile-controls.visible.game-active { display: block; }
+
+      #joystick {
+        position: absolute; bottom: 130px; left: 24px;
+        width: 120px; height: 120px;
+        pointer-events: auto; touch-action: none;
       }
-      #aim-row { display: flex; gap: 8px; }
-      #aim-row button { flex: 1; padding: 10px; font-size: 20px; }
+      #joystick-base {
+        position: absolute; inset: 0; border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+        border: 3px solid rgba(255, 255, 255, 0.45);
+      }
+      #joystick-knob {
+        position: absolute; left: 50%; top: 50%;
+        width: 52px; height: 52px; border-radius: 50%;
+        background: rgba(242, 148, 0, 0.85);
+        border: 3px solid #c47a00;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        pointer-events: none;
+      }
+
+      #action-btn {
+        position: absolute; bottom: 140px; right: 24px;
+        width: 100px; height: 100px; border-radius: 50%;
+        background: #f29400; border: 4px solid #c47a00;
+        color: #fff; font-weight: bold; font-size: 14px;
+        line-height: 1.2; padding: 8px;
+        pointer-events: auto; touch-action: manipulation;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      }
+      #action-btn:active { background: #ffa726; transform: scale(0.95); }
+
+      @media (max-width: 768px), (hover: none) {
+        #mobile-controls.game-active { display: block; }
+        #repeat-btn { bottom: 200px; }
+        .menu-hint-mobile { display: block; }
+        .menu-hint-desktop { display: none; }
+      }
+      .menu-hint-mobile { display: none; }
       .floating-reward {
         position: absolute; left: 50%; top: 35%; transform: translate(-50%, -50%);
         font-size: clamp(48px, 12vw, 80px); font-weight: bold;
@@ -150,7 +184,8 @@
         <h1>Spellerman</h1>
         <p>Spelling Adventure!</p>
         <button id="start-btn">Start Game</button>
-        <p class="menu-hint">WASD to walk &bull; Space to pick up a letter &bull; Walk to the Letter Rack &bull; Space again to throw!</p>
+        <p class="menu-hint menu-hint-desktop">WASD to walk &bull; Space to pick up a letter &bull; Walk to the Letter Rack &bull; Space again to throw!</p>
+        <p class="menu-hint menu-hint-mobile">Drag the joystick to walk &bull; Tap the orange button to pick up or throw letters!</p>
       </div>
       <div id="hud">
         <div id="hint-text"></div>
@@ -158,9 +193,13 @@
         <button id="repeat-btn" title="Repeat word">🔊</button>
         <div id="tray-label">Your word progress</div>
         <div id="tray-panel"></div>
-        <div id="mobile-actions">
-          <button id="action-btn">Pick Up / Throw (Space)</button>
+      </div>
+      <div id="mobile-controls">
+        <div id="joystick">
+          <div id="joystick-base"></div>
+          <div id="joystick-knob"></div>
         </div>
+        <button id="action-btn">Pick Up<br>Throw</button>
       </div>
       <div id="particle-layer"></div>
       <div id="flash-overlay"></div>

@@ -74,6 +74,7 @@ export default class Game {
   start(): void {
     this.running = true;
     document.getElementById('hud')?.classList.add('active');
+    document.getElementById('mobile-controls')?.classList.add('game-active');
     this.speech.warmUp();
     this.startNewWord();
     this.loop();
@@ -373,7 +374,7 @@ export default class Game {
 
     if (this.carried) {
       if (this.rack.isPlayerInRange(pos)) {
-        this.trayUI.setHint('Press Space to throw — right letter sticks, wrong letter bounces back!');
+        this.trayUI.setHint('Tap the orange button to throw — right letter sticks!');
       } else {
         this.trayUI.setHint('Carry the letter to the Letter Rack (walk north)');
       }
@@ -382,7 +383,7 @@ export default class Game {
 
     for (const l of this.letters) {
       if (!l.pickedUp && l.distanceTo(pos) < PICKUP_RADIUS) {
-        this.trayUI.setHint(`Press Space to pick up "${l.letter}" and carry it overhead`);
+        this.trayUI.setHint(`Tap the orange button to pick up "${l.letter}"`);
         return;
       }
     }
