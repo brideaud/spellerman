@@ -36,6 +36,11 @@ export default class SoundManager {
     this.playTone(880, 0.15, 'sine', 0.15, 0.05);
   }
 
+  playPutDown(): void {
+    this.playTone(330, 0.12, 'sine', 0.15);
+    this.playTone(220, 0.18, 'sine', 0.1, 0.06);
+  }
+
   playCorrect(): void {
     [523, 659, 784, 1047].forEach((freq, i) => {
       this.playTone(freq, 0.2, 'square', 0.15, i * 0.1);

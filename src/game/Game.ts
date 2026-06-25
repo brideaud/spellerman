@@ -121,10 +121,28 @@ export default class Game {
     if (this.carried) {
       if (this.rack.isPlayerInRange(this.player.getPosition())) {
         this.tryThrow();
+      } else {
+        this.putDownLetter();
       }
     } else {
       this.tryPickup();
     }
+  }
+
+  private putDownLetter(): void {
+    if (!this.carried || this.actionLocked) return;
+
+    const letter = this.carried;
+    this.carried = null;
+    this.player.setCarrying(false);
+
+    if (this.carriedMesh) {
+      this.player.getCarryAnchor().remove(this.carriedMesh);
+      this.carriedMesh = null;
+    }
+
+    letter.returnToOrigin();
+    this.sfx.playPutDown();
   }
 
   private startNewWord(): void {
@@ -373,13 +391,18 @@ export default class Game {
     const pos = this.player.getPosition();
 
     if (this.carried) {
+      this.setActionButtonLabel(
+        this.rack.isPlayerInRange(pos) ? 'Throw' : 'Put Down',
+      );
       if (this.rack.isPlayerInRange(pos)) {
-        this.trayUI.setHint('Tap the orange button to throw — right letter sticks!');
+        this.trayUI.setHint('Press Space or tap Throw — right letter sticks!');
       } else {
-        this.trayUI.setHint('Carry the letter to the Letter Rack (walk north)');
+        this.trayUI.setHint('Wrong letter? Press Space to put it down. Or walk north to the Letter Rack.');
       }
       return;
     }
+
+    this.setActionButtonLabel('Pick Up');
 
     for (const l of this.letters) {
       if (!l.pickedUp && l.distanceTo(pos) < PICKUP_RADIUS) {
@@ -446,6 +469,11 @@ export default class Game {
       clearTimeout(this.actionUnlockTimer);
       this.actionUnlockTimer = null;
     }
+  }
+
+  private setActionButtonLabel(label: string): void {
+    const btn = document.getElementById('action-btn');
+    if (btn) btn.innerHTML = label.replace(' ', '<br>');
   }
 
   private syncRackHighlight(): void {
