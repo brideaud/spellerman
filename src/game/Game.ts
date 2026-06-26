@@ -12,6 +12,7 @@ import SoundManager from '../systems/SoundManager';
 import TrayManager from '../systems/TrayManager';
 import TrayUI from '../ui/TrayUI';
 import ParticleEffects from '../ui/ParticleEffects';
+import Adversary3D from './Adversary3D';
 
 const PICKUP_RADIUS = 3;
 
@@ -19,6 +20,7 @@ export default class Game {
   private renderer: THREE.WebGLRenderer;
   private world: World;
   private player: Player3D;
+  private adversary: Adversary3D;
   private rack: LetterRack3D;
   private cameraCtrl: CameraController;
   private input: InputManager;
@@ -49,6 +51,9 @@ export default class Game {
     this.player = new Player3D();
     this.world.scene.add(this.player.group);
     this.player.group.position.set(0, 0, 6);
+
+    this.adversary = new Adversary3D();
+    this.world.scene.add(this.adversary.group);
 
     this.rack = new LetterRack3D(this.world.scene);
     this.rewards3d = new RewardEffects3D(this.world.scene);
@@ -112,6 +117,18 @@ export default class Game {
     this.input.endFrame();
     this.letters.forEach((l) => l.update(time));
     this.updateCarriedMesh(time);
+
+    if (!this.celebrating) {
+      this.adversary.update(
+        dt,
+        this.letters,
+        this.player.getPosition(),
+        this.world,
+        (letter) => this.onLetterShuffled(letter),
+        (letter) => this.findShuffleSpot(letter),
+      );
+    }
+
     this.world.update(time);
     this.cameraCtrl.update(dt, this.player.getPosition());
     this.renderer.render(this.world.scene, this.cameraCtrl.camera);
@@ -156,7 +173,40 @@ export default class Game {
     this.trayUI.setup(this.trayManager);
     this.trayUI.setProgress(`Words completed: ${this.wordsCompleted}`);
     this.spawnLetters();
+    this.adversary.reset();
     this.speech.announceWord(this.currentWord);
+  }
+
+  private onLetterShuffled(letter: LetterPickup3D): void {
+    this.sfx.playMischief();
+    this.trayUI.setHint(`Scrambler moved the "${letter.letter}" tile!`);
+    this.particles.showFloatingText('Scrambled!', '#9b59b6');
+  }
+
+  private findShuffleSpot(letter: LetterPickup3D): { x: number; z: number } | null {
+    const rackPos = this.rack.getRackPosition();
+    const playerPos = this.player.getPosition();
+
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 3 + Math.random() * 6;
+      const x = Math.cos(angle) * dist;
+      const z = Math.sin(angle) * dist;
+
+      if (!this.world.isLetterZone(x, z)) continue;
+      if (Math.hypot(x - letter.origin.x, z - letter.origin.z) < 3) continue;
+      if (playerPos.distanceTo(new THREE.Vector3(x, 0, z)) < 2.5) continue;
+      if (Math.hypot(x - rackPos.x, z - rackPos.z) < 4) continue;
+
+      const blocked = this.letters.some((l) => {
+        if (l === letter || l.pickedUp) return false;
+        return Math.hypot(l.origin.x - x, l.origin.z - z) < 2.2;
+      });
+      if (blocked) continue;
+
+      return { x, z };
+    }
+    return null;
   }
 
   private spawnLetters(): void {

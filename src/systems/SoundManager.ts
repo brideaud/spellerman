@@ -41,6 +41,12 @@ export default class SoundManager {
     this.playTone(220, 0.18, 'sine', 0.1, 0.06);
   }
 
+  playMischief(): void {
+    [440, 554, 659, 554].forEach((freq, i) => {
+      this.playTone(freq, 0.1, 'square', 0.08, i * 0.07);
+    });
+  }
+
   playCorrect(): void {
     [523, 659, 784, 1047].forEach((freq, i) => {
       this.playTone(freq, 0.2, 'square', 0.15, i * 0.1);

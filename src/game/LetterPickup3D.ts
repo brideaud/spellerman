@@ -64,6 +64,7 @@ export default class LetterPickup3D {
   readonly origin: THREE.Vector3;
   readonly mesh: THREE.Group;
   pickedUp = false;
+  private shuffling = false;
   private bobOffset = Math.random() * Math.PI * 2;
   private glowRing!: THREE.Mesh;
   private letterSprite!: THREE.Sprite;
@@ -105,8 +106,12 @@ export default class LetterPickup3D {
     this.mesh.add(this.glowRing);
   }
 
+  isShuffling(): boolean {
+    return this.shuffling;
+  }
+
   update(time: number): void {
-    if (this.pickedUp) return;
+    if (this.pickedUp || this.shuffling) return;
     const bob = Math.sin(time * 2.5 + this.bobOffset) * 0.12;
     this.mesh.position.y = bob;
     this.letterSprite.position.y = 1.05 + bob;
@@ -121,8 +126,39 @@ export default class LetterPickup3D {
 
   returnToOrigin(): void {
     this.pickedUp = false;
+    this.shuffling = false;
     this.mesh.position.copy(this.origin);
     this.mesh.visible = true;
+  }
+
+  relocateTo(newX: number, newZ: number): Promise<void> {
+    this.shuffling = true;
+    const startX = this.mesh.position.x;
+    const startZ = this.mesh.position.z;
+
+    return new Promise((resolve) => {
+      const begin = performance.now();
+      const duration = 650;
+
+      const step = (now: number) => {
+        const t = Math.min((now - begin) / duration, 1);
+        const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        this.mesh.position.x = startX + (newX - startX) * ease;
+        this.mesh.position.z = startZ + (newZ - startZ) * ease;
+        this.mesh.position.y = Math.sin(t * Math.PI) * 1.1;
+        this.mesh.rotation.y += 0.12;
+
+        if (t < 1) {
+          requestAnimationFrame(step);
+        } else {
+          this.origin.set(newX, 0, newZ);
+          this.mesh.position.set(newX, 0, newZ);
+          this.shuffling = false;
+          resolve();
+        }
+      };
+      requestAnimationFrame(step);
+    });
   }
 
   distanceTo(pos: THREE.Vector3): number {
