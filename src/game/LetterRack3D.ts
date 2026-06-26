@@ -11,7 +11,7 @@ export interface RackSlot {
 
 const RACK_POS = new THREE.Vector3(0, 0, -11);
 const RACK_RANGE = 5.5;
-const APPROACH_TARGET = new THREE.Vector3(0, 0, -8.5);
+const APPROACH_SOUTH_OFFSET = 2.5;
 const GUIDANCE_RANGE = 9;
 const TILE_H = 0.88;
 const TILE_W = 0.62;
@@ -224,23 +224,26 @@ export default class LetterRack3D {
     return Math.sqrt(dx * dx + dz * dz) < RACK_RANGE && playerPos.z < RACK_POS.z + 2;
   }
 
-  isInGuidanceZone(playerPos: THREE.Vector3): boolean {
-    const dx = playerPos.x - RACK_POS.x;
-    const dz = playerPos.z - RACK_POS.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
+  isInGuidanceZone(playerPos: THREE.Vector3, slotIndex: number): boolean {
+    const approach = this.getApproachTarget(slotIndex);
+    const dist = Math.hypot(playerPos.x - approach.x, playerPos.z - approach.z);
     return dist < GUIDANCE_RANGE && playerPos.z > RACK_POS.z - 1.5;
   }
 
-  getApproachTarget(): THREE.Vector3 {
-    return APPROACH_TARGET.clone();
+  getApproachTarget(slotIndex: number): THREE.Vector3 {
+    const slot = this.slots[slotIndex];
+    if (!slot) return RACK_POS.clone();
+
+    const slotWorld = new THREE.Vector3();
+    slot.group.getWorldPosition(slotWorld);
+    return new THREE.Vector3(slotWorld.x, 0, slotWorld.z + APPROACH_SOUTH_OFFSET);
   }
 
-  getGuidanceStrength(playerPos: THREE.Vector3): number {
-    const distToRack = Math.hypot(playerPos.x - RACK_POS.x, playerPos.z - RACK_POS.z);
-    const proximity = 1 - Math.min(distToRack / GUIDANCE_RANGE, 1);
-
-    const offCenter = Math.hypot(playerPos.x - APPROACH_TARGET.x, playerPos.z - APPROACH_TARGET.z);
-    const misaligned = Math.min(offCenter / 3.5, 1);
+  getGuidanceStrength(playerPos: THREE.Vector3, slotIndex: number): number {
+    const approach = this.getApproachTarget(slotIndex);
+    const distToSpot = Math.hypot(playerPos.x - approach.x, playerPos.z - approach.z);
+    const proximity = 1 - Math.min(distToSpot / GUIDANCE_RANGE, 1);
+    const misaligned = Math.min(distToSpot / 3.5, 1);
 
     return proximity * (0.25 + misaligned * 0.55);
   }

@@ -151,15 +151,18 @@ export default class Game {
   }
 
   private applyRackGuidance(dt: number): void {
-    const pos = this.player.getPosition();
-    if (!this.rack.isInGuidanceZone(pos)) return;
+    const slotIndex = this.trayManager.getNextSlotIndex();
+    if (slotIndex < 0) return;
 
-    const strength = this.rack.getGuidanceStrength(pos);
+    const pos = this.player.getPosition();
+    if (!this.rack.isInGuidanceZone(pos, slotIndex)) return;
+
+    const strength = this.rack.getGuidanceStrength(pos, slotIndex);
     if (strength < 0.02) return;
 
     this.player.applyRackSteering(
-      this.rack.getApproachTarget(),
-      this.rack.getRackPosition(),
+      this.rack.getApproachTarget(slotIndex),
+      this.rack.getThrowTarget(slotIndex),
       dt,
       strength,
     );
