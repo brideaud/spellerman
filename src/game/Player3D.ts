@@ -206,7 +206,7 @@ export default class Player3D {
 
     const pos = this.group.position;
     if (dist > arrivalRadius) {
-      const snapRate = dist < 1.8 ? 12 : 7;
+      const snapRate = dist < 1.5 ? 5 : 3;
       const t = Math.min(1, dt * snapRate);
       pos.x += (approachTarget.x - pos.x) * t;
       pos.z += (approachTarget.z - pos.z) * t;
@@ -217,7 +217,7 @@ export default class Player3D {
     this.targetRotation = Math.atan2(dx, dz);
     const rotDiff = this.targetRotation - this.group.rotation.y;
     const shortest = Math.atan2(Math.sin(rotDiff), Math.cos(rotDiff));
-    this.group.rotation.y += shortest * Math.min(1, 14 * dt);
+    this.group.rotation.y += shortest * Math.min(1, 8 * dt);
   }
 
   getPosition(): THREE.Vector3 {

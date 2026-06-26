@@ -162,29 +162,23 @@ export default class Game {
     if (slotIndex < 0) return move;
 
     const pos = this.player.getPosition();
-    if (!this.rack.isInGuidanceZone(pos, slotIndex)) return move;
-
     const approach = this.rack.getApproachTarget(slotIndex);
     const dx = approach.x - pos.x;
     const dz = approach.z - pos.z;
     const dist = Math.hypot(dx, dz);
-    const ready = this.rack.getThrowReadyRadius();
 
-    if (dist <= ready) return { x: 0, z: 0 };
+    const inputMag = Math.hypot(move.x, move.z);
+    if (inputMag < 0.15) return move;
+
+    const nudge = this.rack.getAlignNudgeStrength(dist);
+    if (nudge <= 0) return move;
 
     const dirX = dx / dist;
     const dirZ = dz / dist;
-    const pull = Math.min(1, this.rack.getGuidanceStrength(pos, slotIndex) + 0.4);
-    const inputMag = Math.hypot(move.x, move.z);
-
-    if (inputMag < 0.15) {
-      return { x: dirX * pull, z: dirZ * pull };
-    }
-
     const normX = move.x / inputMag;
     const normZ = move.z / inputMag;
-    let outX = normX * (1 - pull * 0.9) + dirX * pull;
-    let outZ = normZ * (1 - pull * 0.9) + dirZ * pull;
+    let outX = normX * (1 - nudge) + dirX * nudge;
+    let outZ = normZ * (1 - nudge) + dirZ * nudge;
     const outMag = Math.hypot(outX, outZ);
     if (outMag > 1) {
       outX /= outMag;
