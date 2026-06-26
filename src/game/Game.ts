@@ -103,12 +103,13 @@ export default class Game {
 
     if (!this.celebrating && !this.actionLocked) {
       const move = this.input.getMovement();
+      const guidedMove = this.carried ? this.getRackGuidedMovement(move) : move;
 
-      this.player.update(dt, move.x, move.z, this.cameraCtrl.getAngle());
+      this.player.update(dt, guidedMove.x, guidedMove.z, this.cameraCtrl.getAngle());
       this.world.clampPosition(this.player.getPosition());
 
       if (this.carried) {
-        this.applyRackGuidance(dt);
+        this.applyRackSnap(dt);
       }
 
       if (this.input.consumeInteract()) {
@@ -156,24 +157,66 @@ export default class Game {
     return this.rack.isPlayerInRange(this.player.getPosition(), slotIndex);
   }
 
-  private applyRackGuidance(dt: number): void {
+  private getRackGuidedMovement(move: { x: number; z: number }): { x: number; z: number } {
+    const slotIndex = this.trayManager.getNextSlotIndex();
+    if (slotIndex < 0) return move;
+
+    const pos = this.player.getPosition();
+    if (!this.rack.isInGuidanceZone(pos, slotIndex)) return move;
+
+    const approach = this.rack.getApproachTarget(slotIndex);
+    const dx = approach.x - pos.x;
+    const dz = approach.z - pos.z;
+    const dist = Math.hypot(dx, dz);
+    const ready = this.rack.getThrowReadyRadius();
+
+    if (dist <= ready) return { x: 0, z: 0 };
+
+    const dirX = dx / dist;
+    const dirZ = dz / dist;
+    const pull = Math.min(1, this.rack.getGuidanceStrength(pos, slotIndex) + 0.4);
+    const inputMag = Math.hypot(move.x, move.z);
+
+    if (inputMag < 0.15) {
+      return { x: dirX * pull, z: dirZ * pull };
+    }
+
+    const normX = move.x / inputMag;
+    const normZ = move.z / inputMag;
+    let outX = normX * (1 - pull * 0.9) + dirX * pull;
+    let outZ = normZ * (1 - pull * 0.9) + dirZ * pull;
+    const outMag = Math.hypot(outX, outZ);
+    if (outMag > 1) {
+      outX /= outMag;
+      outZ /= outMag;
+    }
+    return { x: outX, z: outZ };
+  }
+
+  private applyRackSnap(dt: number): void {
     const slotIndex = this.trayManager.getNextSlotIndex();
     if (slotIndex < 0) return;
 
     const pos = this.player.getPosition();
-    if (!this.rack.isInGuidanceZone(pos, slotIndex)) return;
+    const approach = this.rack.getApproachTarget(slotIndex);
+    const dist = Math.hypot(pos.x - approach.x, pos.z - approach.z);
+    const ready = this.rack.getThrowReadyRadius();
 
-    const strength = this.rack.getGuidanceStrength(pos, slotIndex);
-    if (strength < 0.02) return;
+    if (dist <= ready) {
+      this.player.faceToward(this.rack.getThrowTarget(slotIndex));
+      return;
+    }
 
-    this.player.applyRackSteering(
-      this.rack.getApproachTarget(slotIndex),
-      this.rack.getThrowTarget(slotIndex),
-      dt,
-      strength,
-      this.rack.getThrowReadyRadius(),
-    );
-    this.world.clampPosition(this.player.getPosition());
+    if (dist < this.rack.getSnapRange()) {
+      this.player.snapTowardRack(
+        approach,
+        this.rack.getThrowTarget(slotIndex),
+        dt,
+        dist,
+        ready,
+      );
+      this.world.clampPosition(this.player.getPosition());
+    }
   }
 
   private putDownLetter(): void {

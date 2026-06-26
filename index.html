@@ -53,6 +53,14 @@
         color: #fff; font-size: 18px; text-shadow: 0 1px 3px rgba(0,0,0,0.6);
       }
 
+      .version-label {
+        position: absolute; bottom: 16px; left: 20px;
+        color: rgba(255, 255, 255, 0.7); font-size: 13px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+        letter-spacing: 0.03em;
+      }
+      #menu-version-text { color: rgba(255, 255, 255, 0.55); }
+
       #repeat-btn {
         position: absolute; bottom: 175px; left: 24px;
         width: 52px; height: 52px; border-radius: 50%;
@@ -186,10 +194,12 @@
         <button id="start-btn">Start Game</button>
         <p class="menu-hint menu-hint-desktop">WASD to walk &bull; Space to pick up &bull; Space again to put down a wrong letter &bull; Walk to the rack to throw!</p>
         <p class="menu-hint menu-hint-mobile">Joystick to walk &bull; Orange button: pick up, put down, or throw!</p>
+        <div id="menu-version-text" class="version-label"></div>
       </div>
       <div id="hud">
         <div id="hint-text"></div>
         <div id="progress-text"></div>
+        <div id="version-text" class="version-label"></div>
         <button id="repeat-btn" title="Repeat word">🔊</button>
         <div id="tray-label">Your word progress</div>
         <div id="tray-panel"></div>

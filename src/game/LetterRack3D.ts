@@ -10,9 +10,10 @@ export interface RackSlot {
 }
 
 const RACK_POS = new THREE.Vector3(0, 0, -11);
-const APPROACH_SOUTH_OFFSET = 1.15;
-const GUIDANCE_RANGE = 10;
-const THROW_READY_RADIUS = 1.35;
+const APPROACH_SOUTH_OFFSET = 1.0;
+const GUIDANCE_RANGE = 12;
+const THROW_READY_RADIUS = 1.75;
+const SNAP_RANGE = 3.5;
 const TILE_H = 0.88;
 const TILE_W = 0.62;
 const TILE_D = 0.1;
@@ -227,6 +228,10 @@ export default class LetterRack3D {
     return THROW_READY_RADIUS;
   }
 
+  getSnapRange(): number {
+    return SNAP_RANGE;
+  }
+
   isInGuidanceZone(playerPos: THREE.Vector3, slotIndex: number): boolean {
     const approach = this.getApproachTarget(slotIndex);
     const dist = Math.hypot(playerPos.x - approach.x, playerPos.z - approach.z);
@@ -234,12 +239,8 @@ export default class LetterRack3D {
   }
 
   getApproachTarget(slotIndex: number): THREE.Vector3 {
-    const slot = this.slots[slotIndex];
-    if (!slot) return RACK_POS.clone();
-
-    const slotWorld = new THREE.Vector3();
-    slot.group.getWorldPosition(slotWorld);
-    return new THREE.Vector3(slotWorld.x, 0, slotWorld.z + APPROACH_SOUTH_OFFSET);
+    const landing = this.getThrowTarget(slotIndex);
+    return new THREE.Vector3(landing.x, 0, landing.z + APPROACH_SOUTH_OFFSET);
   }
 
   getGuidanceStrength(playerPos: THREE.Vector3, slotIndex: number): number {
@@ -249,9 +250,9 @@ export default class LetterRack3D {
     if (dist <= THROW_READY_RADIUS) return 0;
 
     const proximity = 1 - Math.min(dist / GUIDANCE_RANGE, 1);
-    const finish = dist < 5 ? 0.55 + (1 - dist / 5) * 0.45 : 0;
+    const finish = dist < SNAP_RANGE ? 0.7 + (1 - dist / SNAP_RANGE) * 0.3 : 0;
 
-    return Math.max(proximity * 0.7, finish, 0.25);
+    return Math.max(proximity * 0.75, finish, 0.35);
   }
 
   getThrowTarget(index: number): THREE.Vector3 {

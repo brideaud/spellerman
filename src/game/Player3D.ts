@@ -195,38 +195,29 @@ export default class Player3D {
     this.group.rotation.y = this.targetRotation;
   }
 
-  applyRackSteering(
+  snapTowardRack(
     approachTarget: THREE.Vector3,
     faceTarget: THREE.Vector3,
     dt: number,
-    strength: number,
+    dist: number,
     arrivalRadius: number,
   ): void {
-    if (this.celebrating || this.throwing || strength <= 0) return;
+    if (this.celebrating || this.throwing) return;
 
     const pos = this.group.position;
-    const toTarget = approachTarget.clone().sub(pos);
-    toTarget.y = 0;
-    const dist = toTarget.length();
-
     if (dist > arrivalRadius) {
-      toTarget.normalize();
-      const urgency = dist < 3 ? 1 + (1 - dist / 3) * 1.2 : 1;
-      const steerSpeed = SPEED * strength * 0.8 * urgency;
-      pos.x += toTarget.x * steerSpeed * dt;
-      pos.z += toTarget.z * steerSpeed * dt;
+      const snapRate = dist < 1.8 ? 12 : 7;
+      const t = Math.min(1, dt * snapRate);
+      pos.x += (approachTarget.x - pos.x) * t;
+      pos.z += (approachTarget.z - pos.z) * t;
     }
 
     const dx = faceTarget.x - pos.x;
     const dz = faceTarget.z - pos.z;
-    const faceRot = Math.atan2(dx, dz);
-    const rotDiff = faceRot - this.targetRotation;
+    this.targetRotation = Math.atan2(dx, dz);
+    const rotDiff = this.targetRotation - this.group.rotation.y;
     const shortest = Math.atan2(Math.sin(rotDiff), Math.cos(rotDiff));
-    this.targetRotation += shortest * Math.min(1, strength * 3.5 * dt);
-
-    const rotApply = this.targetRotation - this.group.rotation.y;
-    const rotShort = Math.atan2(Math.sin(rotApply), Math.cos(rotApply));
-    this.group.rotation.y += rotShort * Math.min(1, ROTATION_SPEED * dt);
+    this.group.rotation.y += shortest * Math.min(1, 14 * dt);
   }
 
   getPosition(): THREE.Vector3 {
