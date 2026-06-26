@@ -107,6 +107,10 @@ export default class Game {
       this.player.update(dt, move.x, move.z, this.cameraCtrl.getAngle());
       this.world.clampPosition(this.player.getPosition());
 
+      if (this.carried) {
+        this.applyRackGuidance(dt);
+      }
+
       if (this.input.consumeInteract()) {
         this.handleInteract();
       }
@@ -144,6 +148,22 @@ export default class Game {
     } else {
       this.tryPickup();
     }
+  }
+
+  private applyRackGuidance(dt: number): void {
+    const pos = this.player.getPosition();
+    if (!this.rack.isInGuidanceZone(pos)) return;
+
+    const strength = this.rack.getGuidanceStrength(pos);
+    if (strength < 0.02) return;
+
+    this.player.applyRackSteering(
+      this.rack.getApproachTarget(),
+      this.rack.getRackPosition(),
+      dt,
+      strength,
+    );
+    this.world.clampPosition(this.player.getPosition());
   }
 
   private putDownLetter(): void {

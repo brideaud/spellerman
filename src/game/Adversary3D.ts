@@ -50,12 +50,31 @@ export default class Adversary3D {
     hairCap.position.y = 1.72;
     this.group.add(hairCap);
 
-    const eyeMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), eyeMat);
-    leftEye.position.set(-0.11, 1.68, 0.3);
-    const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), eyeMat);
-    rightEye.position.set(0.11, 1.68, 0.3);
-    this.group.add(leftEye, rightEye);
+    const maskMat = new THREE.MeshLambertMaterial({ color: 0x2d1b4e });
+    const mask = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.2, 0.1), maskMat);
+    mask.position.set(0, 0.03, 0.31);
+    this.head.add(mask);
+
+    const leftWing = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.07), maskMat);
+    leftWing.position.set(-0.3, 0.09, 0.3);
+    leftWing.rotation.z = 0.45;
+    this.head.add(leftWing);
+
+    const rightWing = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.07), maskMat);
+    rightWing.position.set(0.3, 0.09, 0.3);
+    rightWing.rotation.z = -0.45;
+    this.head.add(rightWing);
+
+    const slitMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
+    const leftSlit = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.035, 0.02), slitMat);
+    leftSlit.position.set(-0.11, 0.03, 0.37);
+    leftSlit.rotation.z = 0.22;
+    this.head.add(leftSlit);
+
+    const rightSlit = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.035, 0.02), slitMat);
+    rightSlit.position.set(0.11, 0.03, 0.37);
+    rightSlit.rotation.z = -0.22;
+    this.head.add(rightSlit);
 
     const grin = new THREE.Mesh(
       new THREE.SphereGeometry(0.08, 6, 4, 0, Math.PI * 2, 0, Math.PI),

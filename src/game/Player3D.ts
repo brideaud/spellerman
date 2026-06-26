@@ -195,6 +195,38 @@ export default class Player3D {
     this.group.rotation.y = this.targetRotation;
   }
 
+  applyRackSteering(
+    approachTarget: THREE.Vector3,
+    faceTarget: THREE.Vector3,
+    dt: number,
+    strength: number,
+  ): void {
+    if (this.celebrating || this.throwing || strength <= 0) return;
+
+    const pos = this.group.position;
+    const toTarget = approachTarget.clone().sub(pos);
+    toTarget.y = 0;
+    const dist = toTarget.length();
+
+    if (dist > 0.12) {
+      toTarget.normalize();
+      const steerSpeed = SPEED * strength * 0.55;
+      pos.x += toTarget.x * steerSpeed * dt;
+      pos.z += toTarget.z * steerSpeed * dt;
+    }
+
+    const dx = faceTarget.x - pos.x;
+    const dz = faceTarget.z - pos.z;
+    const faceRot = Math.atan2(dx, dz);
+    const rotDiff = faceRot - this.targetRotation;
+    const shortest = Math.atan2(Math.sin(rotDiff), Math.cos(rotDiff));
+    this.targetRotation += shortest * Math.min(1, strength * 3.5 * dt);
+
+    const rotApply = this.targetRotation - this.group.rotation.y;
+    const rotShort = Math.atan2(Math.sin(rotApply), Math.cos(rotApply));
+    this.group.rotation.y += rotShort * Math.min(1, ROTATION_SPEED * dt);
+  }
+
   getPosition(): THREE.Vector3 {
     return this.group.position;
   }

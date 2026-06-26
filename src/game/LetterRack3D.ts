@@ -10,7 +10,9 @@ export interface RackSlot {
 }
 
 const RACK_POS = new THREE.Vector3(0, 0, -11);
-const RACK_RANGE = 5;
+const RACK_RANGE = 5.5;
+const APPROACH_TARGET = new THREE.Vector3(0, 0, -8.5);
+const GUIDANCE_RANGE = 9;
 const TILE_H = 0.88;
 const TILE_W = 0.62;
 const TILE_D = 0.1;
@@ -220,6 +222,27 @@ export default class LetterRack3D {
     const dx = playerPos.x - RACK_POS.x;
     const dz = playerPos.z - RACK_POS.z;
     return Math.sqrt(dx * dx + dz * dz) < RACK_RANGE && playerPos.z < RACK_POS.z + 2;
+  }
+
+  isInGuidanceZone(playerPos: THREE.Vector3): boolean {
+    const dx = playerPos.x - RACK_POS.x;
+    const dz = playerPos.z - RACK_POS.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    return dist < GUIDANCE_RANGE && playerPos.z > RACK_POS.z - 1.5;
+  }
+
+  getApproachTarget(): THREE.Vector3 {
+    return APPROACH_TARGET.clone();
+  }
+
+  getGuidanceStrength(playerPos: THREE.Vector3): number {
+    const distToRack = Math.hypot(playerPos.x - RACK_POS.x, playerPos.z - RACK_POS.z);
+    const proximity = 1 - Math.min(distToRack / GUIDANCE_RANGE, 1);
+
+    const offCenter = Math.hypot(playerPos.x - APPROACH_TARGET.x, playerPos.z - APPROACH_TARGET.z);
+    const misaligned = Math.min(offCenter / 3.5, 1);
+
+    return proximity * (0.25 + misaligned * 0.55);
   }
 
   getThrowTarget(index: number): THREE.Vector3 {
