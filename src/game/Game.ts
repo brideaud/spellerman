@@ -140,7 +140,7 @@ export default class Game {
 
   private handleInteract(): void {
     if (this.carried) {
-      if (this.rack.isPlayerInRange(this.player.getPosition())) {
+      if (this.canThrowAtRack()) {
         this.tryThrow();
       } else {
         this.putDownLetter();
@@ -148,6 +148,12 @@ export default class Game {
     } else {
       this.tryPickup();
     }
+  }
+
+  private canThrowAtRack(): boolean {
+    const slotIndex = this.trayManager.getNextSlotIndex();
+    if (slotIndex < 0) return false;
+    return this.rack.isPlayerInRange(this.player.getPosition(), slotIndex);
   }
 
   private applyRackGuidance(dt: number): void {
@@ -165,6 +171,7 @@ export default class Game {
       this.rack.getThrowTarget(slotIndex),
       dt,
       strength,
+      this.rack.getThrowReadyRadius(),
     );
     this.world.clampPosition(this.player.getPosition());
   }
@@ -348,10 +355,8 @@ export default class Game {
 
   private tryThrow(): void {
     if (!this.carried || this.celebrating || this.actionLocked) return;
-    if (!this.rack.isPlayerInRange(this.player.getPosition())) return;
-
     const slotIndex = this.trayManager.getNextSlotIndex();
-    if (slotIndex < 0) return;
+    if (slotIndex < 0 || !this.rack.isPlayerInRange(this.player.getPosition(), slotIndex)) return;
 
     this.actionLocked = true;
     this.scheduleActionUnlock(4000);
@@ -464,10 +469,9 @@ export default class Game {
     const pos = this.player.getPosition();
 
     if (this.carried) {
-      this.setActionButtonLabel(
-        this.rack.isPlayerInRange(pos) ? 'Throw' : 'Put Down',
-      );
-      if (this.rack.isPlayerInRange(pos)) {
+      const canThrow = this.canThrowAtRack();
+      this.setActionButtonLabel(canThrow ? 'Throw' : 'Put Down');
+      if (canThrow) {
         this.trayUI.setHint('Press Space or tap Throw — right letter sticks!');
       } else {
         this.trayUI.setHint('Wrong letter? Press Space to put it down. Or walk north to the Letter Rack.');

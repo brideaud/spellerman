@@ -200,6 +200,7 @@ export default class Player3D {
     faceTarget: THREE.Vector3,
     dt: number,
     strength: number,
+    arrivalRadius: number,
   ): void {
     if (this.celebrating || this.throwing || strength <= 0) return;
 
@@ -208,9 +209,10 @@ export default class Player3D {
     toTarget.y = 0;
     const dist = toTarget.length();
 
-    if (dist > 0.12) {
+    if (dist > arrivalRadius) {
       toTarget.normalize();
-      const steerSpeed = SPEED * strength * 0.55;
+      const urgency = dist < 3 ? 1 + (1 - dist / 3) * 1.2 : 1;
+      const steerSpeed = SPEED * strength * 0.8 * urgency;
       pos.x += toTarget.x * steerSpeed * dt;
       pos.z += toTarget.z * steerSpeed * dt;
     }
