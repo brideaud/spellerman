@@ -79,6 +79,7 @@ export default class Game {
   start(): void {
     this.running = true;
     document.getElementById('hud')?.classList.add('active');
+    document.getElementById('repeat-btn')?.classList.add('active');
     document.getElementById('mobile-controls')?.classList.add('game-active');
     this.speech.warmUp();
     this.startNewWord();
@@ -87,6 +88,7 @@ export default class Game {
 
   stop(): void {
     this.running = false;
+    document.getElementById('repeat-btn')?.classList.remove('active');
     cancelAnimationFrame(this.animId);
     this.clearActionUnlock();
     this.clearWordAdvanceTimers();

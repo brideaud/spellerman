@@ -34,7 +34,10 @@ export default class SpeechManager {
   }
 
   announceWord(word: string, onEnd?: () => void): void {
-    this.speak(`Spell the word: ${word}`, onEnd);
+    const phrase = `Spell the word: ${word}`;
+    this.speak(phrase, () => {
+      setTimeout(() => this.speak(phrase, onEnd), 450);
+    });
   }
 
   sayOops(): void {
